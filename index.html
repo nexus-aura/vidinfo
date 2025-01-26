@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Info Extractor</title>
+    <style>
+        /* Reset some basic styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Basic Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            width: 48%;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button.reset {
+            background-color: #f44336;
+        }
+
+        button.reset:hover {
+            background-color: #e53935;
+        }
+
+        .result {
+            margin-top: 20px;
+            word-wrap: break-word;
+        }
+
+        .result p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        /* Tag Styling */
+        .result .tags {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result .tags span {
+            display: block;
+            padding: 5px;
+            background-color: #f0f0f0;
+            margin: 2px 0;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 20px;
+            }
+
+            input[type="text"], button {
+                font-size: 14px;
+            }
+
+            button {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Video Info Extractor</h1>
+        <input type="text" id="youtubeLink" placeholder="Paste YouTube link here...">
+        <div class="button-group">
+            <button onclick="extractInfo()">Get Info</button>
+            <button class="reset" onclick="resetForm()">Reset</button>
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        async function extractInfo() {
+            const youtubeLink = document.getElementById('youtubeLink').value;
+            const videoId = extractVideoId(youtubeLink);
+
+            if (!videoId) {
+                alert('Please enter a valid YouTube link.');
+                return;
+            }
+
+            const apiKey = 'AIzaSyDLQ_-mVSVbK4jpqMedEGR9uqongSkOI2E'; // Your YouTube API Key
+            const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.items && data.items.length > 0) {
+                    const videoInfo = data.items[0].snippet;
+                    displayResult(videoInfo);
+                } else {
+                    alert('No video found with the provided link.');
+                }
+            } catch (error) {
+                console.error('Error fetching video info:', error);
+                alert('Failed to fetch video info.');
+            }
+        }
+
+        function extractVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|shorts\/|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function displayResult(videoInfo) {
+            const resultDiv = document.getElementById('result');
+            const tags = videoInfo.tags ? videoInfo.tags.map(tag => `<span>${tag},</span>`).join('') : '<span>No tags available</span>';
+            resultDiv.innerHTML = `
+                <h2>Video Info</h2>
+                <p><strong>Title:</strong> ${videoInfo.title}</p>
+                <p><strong>Description:</strong> ${videoInfo.description}</p>
+                <div class="tags"><strong>Tags:</strong>${tags}</div>
+            `;
+        }
+
+        function resetForm() {
+            document.getElementById('youtubeLink').value = '';
+            document.getElementById('result').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
